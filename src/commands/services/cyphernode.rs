@@ -1,6 +1,6 @@
 /// Contains all subcommands under cncli service main <SUBCOMMAND>
 
-use crate::e::{CNCError};
+use crate::lib::e::{CNCError};
 
 /// Runs build.sh
 pub fn build()->Result<(), CNCError>{

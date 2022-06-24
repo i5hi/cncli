@@ -1,8 +1,10 @@
 #![allow(dead_code)]
 use clap::{App, AppSettings, Arg, SubCommand};
 
-mod e;
-mod cyphernode;
+mod lib;
+mod commands;
+
+use crate::commands::services::cyphernode;
 fn main() {
     let matches = App::new("\x1b[0;92mcncli\x1b[0m")
         .about("\x1b[0;94mCyphernode admin tools.\x1b[0m")
@@ -12,7 +14,7 @@ fn main() {
         .subcommand(
             App::new("fetch")
                 .about("Get cyphernode release from SatoshiPortal")
-                .display_order(0)
+                .display_order(1)
                 .arg(
                     Arg::with_name("version")
                     .short("v")
@@ -21,13 +23,8 @@ fn main() {
                 )
         )
         .subcommand(
-            App::new("init")
-                .about("Setup cyphernode working directory")
-                .display_order(1)
-        )
-        .subcommand(
-            App::new("info")
-                .about("Get info about cyphernode")
+            App::new("check")
+                .about("Check status of cyphernode repository")
                 .display_order(2)
         )
         .subcommand(
