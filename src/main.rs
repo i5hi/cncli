@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use std::str::FromStr;
+use clap::{App, AppSettings, Arg, SubCommand};
 
-
+mod e;
+mod cyphernode;
 fn main() {
     let matches = App::new("\x1b[0;92mcncli\x1b[0m")
         .about("\x1b[0;94mCyphernode admin tools.\x1b[0m")
@@ -232,6 +232,41 @@ fn main() {
             match service_matches.subcommand() {
                     ("list", Some(_)) => {
                         println!("List running services")
+                    }
+                    ("main", Some(subcommand_matches)) => {
+                        match subcommand_matches.subcommand() {
+                            ("build", Some(_)) => {
+                                match cyphernode::build(){
+                                    Ok(_)=>println!("SUCCESS"),
+                                    Err(e)=>println!("{:#?}", e)
+                                }
+                            }
+                            ("setup", Some(_)) => {
+                                match cyphernode::setup(){
+                                    Ok(_)=>println!("SUCCESS"),
+                                    Err(e)=>println!("{:#?}", e)
+                                }
+                            }
+                            ("start", Some(_)) => {
+                                match cyphernode::start(){
+                                    Ok(_)=>println!("SUCCESS"),
+                                    Err(e)=>println!("{:#?}", e)
+                                }
+                            }
+                            ("stop", Some(_)) => {
+                                match cyphernode::stop(){
+                                    Ok(_)=>println!("SUCCESS"),
+                                    Err(e)=>println!("{:#?}", e)
+                                }
+                            }
+                            ("test", Some(_)) => {
+                                match cyphernode::test(){
+                                    Ok(_)=>println!("SUCCESS"),
+                                    Err(e)=>println!("{:#?}", e)
+                                }
+                            }
+                            _ => unreachable!(),
+                        }
                     }
                     ("gatekeeper", Some(subcommand_matches)) => {
                         match subcommand_matches.subcommand() {

@@ -6,5 +6,8 @@ description = "Command line cyphernode helper"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde = "1.0.126"
+serde_derive = "1.0.0"
+serde_json = "1.0.64"
 sled = "0.34.1"
 clap = "2.25.1"
