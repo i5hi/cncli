@@ -10,19 +10,30 @@ fn main() {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .author("Bitcoin Watchdog: BC5A D8A2 6AAC D383 EF63 0D45 5AE8 AC51 D171 F109")
         .subcommand(
+            App::new("fetch")
+                .about("Get cyphernode release from SatoshiPortal")
+                .display_order(0)
+                .arg(
+                    Arg::with_name("version")
+                    .short("v")
+                    .help("Choose version.")
+                    .default_value("latest")
+                )
+        )
+        .subcommand(
             App::new("init")
                 .about("Setup cyphernode working directory")
-                .display_order(0)
+                .display_order(1)
         )
         .subcommand(
             App::new("info")
                 .about("Get info about cyphernode")
-                .display_order(1)
+                .display_order(2)
         )
         .subcommand(
             App::new("service")
                 .about("Service level subcommands")
-                .display_order(2)
+                .display_order(3)
                 .setting(AppSettings::SubcommandRequiredElseHelp)
                 .subcommand(
                     App::new("list").about("List all running services."))
@@ -74,7 +85,27 @@ fn main() {
                         SubCommand::with_name("exec")
                         .about("Executes a command inside service container"),
                         SubCommand::with_name("conf")
-                        .about("Display service configuration"),
+                            .arg(
+                                Arg::with_name("file")
+                                .short("f")
+                                .required(false)
+                                .help("Specifies which conf file to open or edit. Select by index or full path.")
+                            )
+                            .arg(
+                                Arg::with_name("edit")
+                                .short("e")
+                                .required(false)
+                                .help("Edit mode opens the conf file in your editor of choice")
+                                .default_value("nano")
+                            )
+                            .arg(
+                                Arg::with_name("print")
+                                .short("p")
+                                .required(false)
+                                .takes_value(false)
+                                .help("Prints the conf file to stdout")
+                            )
+                        .about("Display all service configuration files (with index)."),
                         SubCommand::with_name("restart")
                         .about("Restart service"),
                     ])).
@@ -91,24 +122,24 @@ fn main() {
                         SubCommand::with_name("exec")
                         .about("Executes a command inside service container"),
                         SubCommand::with_name("conf")
-                        .about("Display service configuration"),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ]))
-                .subcommand(
-                    App::new("pycoin")
-                    .about("Bitcoin keys and addresses tool")
-                    .display_order(5)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                        .about("Display service configuration"),
+                            .arg(
+                                Arg::with_name("file")
+                                .short("f")
+                                .help("Specifies which conf file to open or edit. Select by index or full path.")
+                            )
+                            .arg(
+                                Arg::with_name("edit")
+                                .short("e")
+                                .help("Edit mode opens the conf file in your editor of choice")
+                                .default_value("nano")
+                            )
+                            .arg(
+                                Arg::with_name("print")
+                                .short("p")
+                                .takes_value(false)
+                                .help("Prints the conf file to stdout")
+                            )
+                        .about("Display all service configuration files (with index)."),
                         SubCommand::with_name("restart")
                         .about("Restart service"),
                     ]))
@@ -125,24 +156,27 @@ fn main() {
                         SubCommand::with_name("exec")
                         .about("Executes a command inside service container"),
                         SubCommand::with_name("conf")
-                        .about("Display service configuration"),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ]))
-                .subcommand(
-                    App::new("ots")
-                    .about("Used to stamp hashes on the Bitcoin blockchain")
-                    .display_order(7)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                        .about("Display service configuration"),
+                            .arg(
+                                Arg::with_name("file")
+                                .required(false)
+                                .short("f")
+                                .help("Specifies which conf file to open or edit. Select by index or full path.")
+                            )
+                            .arg(
+                                Arg::with_name("edit")
+                                .short("e")
+                                .required(false)
+                                .help("Edit mode opens the conf file in your editor of choice")
+                                .default_value("nano")
+                            )
+                            .arg(
+                                Arg::with_name("print")
+                                .short("p")
+                                .required(false)
+                                .takes_value(false)
+                                .help("Prints the conf file to stdout")
+                            )
+                        .about("Display all service configuration files (with index)."),
                         SubCommand::with_name("restart")
                         .about("Restart service"),
                     ]))
@@ -159,28 +193,31 @@ fn main() {
                         SubCommand::with_name("exec")
                         .about("Executes a command inside service container"),
                         SubCommand::with_name("conf")
-                        .about("Display service configuration"),
+                            .arg(
+                                Arg::with_name("file")
+                                .short("f")
+                                .required(false)
+                                .help("Specifies which conf file to open or edit. Select by index or full path.")
+                            )
+                            .arg(
+                                Arg::with_name("edit")
+                                .short("e")
+                                .required(false)
+                                .help("Edit mode opens the conf file in your editor of choice")
+                                .default_value("nano")
+                            )
+                            .arg(
+                                Arg::with_name("print")
+                                .short("p")
+                                .required(false)
+                                .takes_value(false)
+                                .help("Prints the conf file to stdout")
+                            )
+                        .about("Display all service configuration files (with index)."),
                         SubCommand::with_name("restart")
                         .about("Restart service"),
                     ]))
-                .subcommand(
-                    App::new("ln")
-                    .about("Core Lightning Node")
-                    .display_order(9)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                        .about("Display service configuration"),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ]),
-                ),
+
         )
         .get_matches();
     
@@ -208,7 +245,7 @@ fn main() {
                                 println!("Execute command in service container");
                             }
                             ("conf", Some(_)) => {
-                                println!("Print service configuration.");
+                                println!("List service configuration.");
                             }
                             ("restart", Some(_)) => {
                                 println!("Restart Service");
@@ -228,7 +265,7 @@ fn main() {
                                 println!("Execute command in service container");
                             }
                             ("conf", Some(_)) => {
-                                println!("Print service configuration.");
+                                println!("List service configuration.");
                             }
                             ("restart", Some(_)) => {
                                 println!("Restart Service");
@@ -248,7 +285,7 @@ fn main() {
                                 println!("Execute command in service container");
                             }
                             ("conf", Some(_)) => {
-                                println!("Print service configuration.");
+                                println!("List service configuration.");
                             }
                             ("restart", Some(_)) => {
                                 println!("Restart Service");
@@ -256,26 +293,7 @@ fn main() {
                             _ => unreachable!(),
                         }
                     }
-                    ("pycoin", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("Print service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
+
                     ("tor", Some(subcommand_matches)) => {
                         match subcommand_matches.subcommand() {
                             ("info", Some(_)) => {
@@ -288,7 +306,7 @@ fn main() {
                                 println!("Execute command in service container");
                             }
                             ("conf", Some(_)) => {
-                                println!("Print service configuration.");
+                                println!("List service configuration.");
                             }
                             ("restart", Some(_)) => {
                                 println!("Restart Service");
@@ -296,26 +314,7 @@ fn main() {
                             _ => unreachable!(),
                         }
                     }
-                    ("ots", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("Print service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
+
                     ("eps", Some(subcommand_matches)) => {
                         match subcommand_matches.subcommand() {
                             ("info", Some(_)) => {
@@ -328,7 +327,7 @@ fn main() {
                                 println!("Execute command in service container");
                             }
                             ("conf", Some(_)) => {
-                                println!("Print service configuration.");
+                                println!("List service configuration.");
                             }
                             ("restart", Some(_)) => {
                                 println!("Restart Service");
@@ -336,26 +335,6 @@ fn main() {
                             _ => unreachable!(),
                         }
                     }
-                    ("ln", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("Print service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }                    }
-
                 _ => unreachable!(),
             }
         }
