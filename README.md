@@ -20,54 +20,58 @@ The primary goal is to create a client tool that makes it easy for anyone to run
 
 In spirit of the original project, cncli aims not to reinvent the wheel. It simply redirects the user to existing parts of cyphernode to get their work done more easily through a more friendly interface.
 
-## future
-
-If this client works out well, we will consider creating a desktop GUI using dart/flutter.
-
 ## test run
 
-### NOTE: THIS SOFTWARE DOES NOTHING RIGHT NOW. It only contains the api wireframe.
+First install the rust toolchain:
 
-Once you have rust installed and cloned the project. You can use `cargo run` to test run commands.
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Clone the project:
+
+```bash
+git clone https://github.com/i5hi/cncli
+cd cncli
+```
+
+Once you have rust installed and cloned the project. You can use `cargo run` to test run commands. (recommended since project is still in dev)
+
+ALTERNATIVELY, build the binary and move it to your /bin directory:
+
+```bash
+cargo build --release -j <CPU CORES>
+cp target/release/cnclie /bin
+strip /bin/cncli
+```
 
 ```bash
 # see all available commands
-cargo run
+cargo run / cncli
 
-# see all available service sub commands
-cargo run services
+# sets up a wokring directory at $HOME/.cncli where path information about cyphernode repo is cloned
+cargo run init --path /home/ishi --repo https://github.com/SatoshiPortal/cyphernode.git
 
 # run build.sh
-cargo services main build
+cargo run build
 
 # run setup.sh (works with flags like -irc too)
-cargo services main setup
+cargo run setup
 
 # run start.sh
-cargo services main start
+cargo run start
 
-# tail bitcoin logs
-cargo run services bitcoin log
+# run stop.sh
+cargo run stop
 
-# view bitcoin conf
-cargo run services bitcoin conf
-
-# view proxy logs
-cargo run services proxy log
-```
-
-## building the binary
-
-```bash
-cargo build --release
-# this will build a binary in the target folder called cncli
-
-mv target/release/cncli /bin
-# you can strip this binary if you want to make it smaller by removing debug symbols etc.
-strip /bin/cncli
-
-cncli info
+# runs docker ps with --filter and --format
+cargo run list
 ```
 
 
+## upgrades
+
+- After setup is complete, datadir path should be stored in working dir $HOME/.cncli to allow easy inspection
+
+- Process must automatically exit on completion. Currently Ctrl+C is required to free the terminal.
 

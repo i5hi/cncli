@@ -13,3 +13,5 @@ ureq = "2.4.0"
 sled = "0.34.1"
 clap = "2.25.1"
 git2 = "0.15.0"
+ctrlc = { version = "3.0", features = ["termination"] }
+run_script = "0.10.0"

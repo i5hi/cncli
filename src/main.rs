@@ -1,11 +1,9 @@
 #![allow(dead_code)]
 use clap::{App, AppSettings, Arg, SubCommand};
 use git2::Repository;
-
-mod lib;
-mod commands;
-
-use crate::commands::services::cyphernode;
+use std::process::Command;
+use std::sync::mpsc::channel;
+use run_script::ScriptOptions;
 fn main() {
     let matches = App::new("\x1b[0;92mcncli\x1b[0m")
         .about("\x1b[0;94mCyphernode admin tools.\x1b[0m")
@@ -15,241 +13,85 @@ fn main() {
         .subcommand(
             App::new("init")
                 .about("Setup cyphernode locally")
-                .display_order(1)
+                .display_order(0)
                 .arg(
                     Arg::with_name("repo")
-                    .takes_value(true)
-                    .short("r")
-                    .help("Url to cyphernode repo")
-                    .default_value("https://github.com/SatoshiPortal/cyphernode.git")
+                        .takes_value(true)
+                        .short("r")
+                        .help("Url to cyphernode repo")
+                        .default_value("https://github.com/SatoshiPortal/cyphernode.git"),
                 )
                 .arg(
                     Arg::with_name("path")
-                    .takes_value(true)
-                    .short("p")
-                    .help("Choose path to repo.")
-                )
+                        .takes_value(true)
+                        .short("p")
+                        .help("Choose path to repo."),
+                ),
         )
         .subcommand(
-            App::new("check")
-                .about("Check status of cyphernode repository")
+            App::new("build")
+                .about("Build cyphernode images")
+                .display_order(1),
+        )
+        .subcommand(
+            App::new("setup")
+                .about("Run setup script")
                 .display_order(2)
+                .arg(
+                    Arg::with_name("irc")
+                        .takes_value(false)
+                        .help("Use -irc flag"),
+                ),
         )
+        .subcommand(App::new("start").about("Run start script").display_order(3))
+        .subcommand(App::new("stop").about("Run stop script").display_order(4))
         .subcommand(
-            App::new("service")
-                .about("Service level subcommands")
-                .display_order(3)
-                .setting(AppSettings::SubcommandRequiredElseHelp)
-                .subcommand(
-                    App::new("list").about("List all running services."))
-                    .display_order(0)
-                .subcommand(
-                    App::new("main")
-                    .about("Main cyphernode commands.")
-                    .display_order(1)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("build")
-                        .about("Build all service containers (build.sh)"),
-                        SubCommand::with_name("setup")
-                        .about("Setup cyphernode (setup.sh)"),
-                        SubCommand::with_name("start")
-                        .about("Start cyphernode (start.sh)"),
-                        SubCommand::with_name("stop")
-                        .about("Stop cyphernode (stop.sh)"),
-                        SubCommand::with_name("test")
-                        .about("Test cyphernode (testdeployment.sh)"),
-                    ]))
-                .subcommand(
-                    App::new("gatekeeper")
-                    .about("Entry point for all requests made to cyphernode.")
-                    .display_order(2)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                        .about("Display service configuration"),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ]))
-                .subcommand(
-                    App::new("proxy")
-                    .about("Core module in cyphernode. Handles all requests from client via gatekeeper and dispatches to other other services.")
-                    .display_order(3)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                            .arg(
-                                Arg::with_name("file")
-                                .short("f")
-                                .required(false)
-                                .help("Specifies which conf file to open or edit. Select by index or full path.")
-                            )
-                            .arg(
-                                Arg::with_name("edit")
-                                .short("e")
-                                .required(false)
-                                .help("Edit mode opens the conf file in your editor of choice")
-                                .default_value("nano")
-                            )
-                            .arg(
-                                Arg::with_name("print")
-                                .short("p")
-                                .required(false)
-                                .takes_value(false)
-                                .help("Prints the conf file to stdout")
-                            )
-                        .about("Display all service configuration files (with index)."),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ])).
-                subcommand(
-                    App::new("bitcoin")
-                    .about("Bitcoin Core Node")
-                    .display_order(4)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                            .arg(
-                                Arg::with_name("file")
-                                .short("f")
-                                .help("Specifies which conf file to open or edit. Select by index or full path.")
-                            )
-                            .arg(
-                                Arg::with_name("edit")
-                                .short("e")
-                                .help("Edit mode opens the conf file in your editor of choice")
-                                .default_value("nano")
-                            )
-                            .arg(
-                                Arg::with_name("print")
-                                .short("p")
-                                .takes_value(false)
-                                .help("Prints the conf file to stdout")
-                            )
-                        .about("Display all service configuration files (with index)."),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ]))
-                .subcommand(
-                    App::new("tor")
-                    .about("Used to serve traefik, bitcoin and/or lightning as a HiddenService as well as Internet Gateway")
-                    .display_order(6)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                            .arg(
-                                Arg::with_name("file")
-                                .required(false)
-                                .short("f")
-                                .help("Specifies which conf file to open or edit. Select by index or full path.")
-                            )
-                            .arg(
-                                Arg::with_name("edit")
-                                .short("e")
-                                .required(false)
-                                .help("Edit mode opens the conf file in your editor of choice")
-                                .default_value("nano")
-                            )
-                            .arg(
-                                Arg::with_name("print")
-                                .short("p")
-                                .required(false)
-                                .takes_value(false)
-                                .help("Prints the conf file to stdout")
-                            )
-                        .about("Display all service configuration files (with index)."),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ]))
-                .subcommand(
-                    App::new("eps")
-                    .about("Electrum Personal Server")
-                    .display_order(8)
-                    .setting(AppSettings::SubcommandRequiredElseHelp)
-                    .subcommands(vec![
-                        SubCommand::with_name("info")
-                        .about("Information about running service"),
-                        SubCommand::with_name("log")
-                        .about("Debug log"),
-                        SubCommand::with_name("exec")
-                        .about("Executes a command inside service container"),
-                        SubCommand::with_name("conf")
-                            .arg(
-                                Arg::with_name("file")
-                                .short("f")
-                                .required(false)
-                                .help("Specifies which conf file to open or edit. Select by index or full path.")
-                            )
-                            .arg(
-                                Arg::with_name("edit")
-                                .short("e")
-                                .required(false)
-                                .help("Edit mode opens the conf file in your editor of choice")
-                                .default_value("nano")
-                            )
-                            .arg(
-                                Arg::with_name("print")
-                                .short("p")
-                                .required(false)
-                                .takes_value(false)
-                                .help("Prints the conf file to stdout")
-                            )
-                        .about("Display all service configuration files (with index)."),
-                        SubCommand::with_name("restart")
-                        .about("Restart service"),
-                    ]))
-
+            App::new("list")
+                .about("List all running services")
+                .display_order(5),
         )
         .get_matches();
-    
+
     match matches.subcommand() {
         ("init", Some(submatches)) => {
             let db_path = std::env::var("HOME").unwrap() + "/.cncli";
             let db: sled::Db = sled::open(db_path).unwrap();
             let path = db.get(b"path").unwrap();
-            if path.is_some(){
-                let exists = std::path::Path::new((std::str::from_utf8(&path.clone().unwrap()).unwrap().to_string()).as_str()).exists();
-                if exists{
-                    println!("Repo already exists at {:#?}",std::str::from_utf8(&path.clone().unwrap()).unwrap().to_string());
+            if path.is_some() {
+                let exists = std::path::Path::new(
+                    (std::str::from_utf8(&path.clone().unwrap())
+                        .unwrap()
+                        .to_string())
+                    .as_str(),
+                )
+                .exists();
+                if exists {
+                    println!(
+                        "Repo already exists at {:#?}",
+                        std::str::from_utf8(&path.clone().unwrap())
+                            .unwrap()
+                            .to_string()
+                    );
                     panic!("Already initialized.")
                 }
             }
             let repo = submatches.value_of("repo").unwrap();
             let path = submatches.value_of("path");
-            if path.is_none(){
+            if path.is_none() {
                 println!("--path is required. This is where the repo will be cloned.");
                 panic!("--path is required.");
-            }
-            else{
-                let exists = std::path::Path::new((path.clone().unwrap().to_string() + "/cyphernode").as_str()).exists();
-                if exists{
-                    db.insert(b"path", (path.unwrap().to_string() + "/cyphernode").as_bytes()).unwrap();
+            } else {
+                let exists = std::path::Path::new(
+                    (path.clone().unwrap().to_string() + "/cyphernode").as_str(),
+                )
+                .exists();
+                if exists {
+                    db.insert(
+                        b"path",
+                        (path.unwrap().to_string() + "/cyphernode").as_bytes(),
+                    )
+                    .unwrap();
                     panic!("Repo exists at path {}/cyphernode", path.unwrap());
-
                 }
             }
             match Repository::clone(repo, path.unwrap()) {
@@ -259,155 +101,151 @@ fn main() {
 
             db.insert(b"path", path.unwrap().as_bytes()).unwrap();
         }
-        ("info", Some(_)) => {
-            println!("CYPHERNODE INFO");
-        }
-        ("service", Some(service_matches)) => {
-            match service_matches.subcommand() {
-                    ("list", Some(_)) => {
-                        println!("List running services")
-                    }
-                    ("main", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("build", Some(_)) => {
-                                match cyphernode::build(){
-                                    Ok(_)=>println!("SUCCESS"),
-                                    Err(e)=>println!("{:#?}", e)
-                                }
-                            }
-                            ("setup", Some(_)) => {
-                                match cyphernode::setup(){
-                                    Ok(_)=>println!("SUCCESS"),
-                                    Err(e)=>println!("{:#?}", e)
-                                }
-                            }
-                            ("start", Some(_)) => {
-                                match cyphernode::start(){
-                                    Ok(_)=>println!("SUCCESS"),
-                                    Err(e)=>println!("{:#?}", e)
-                                }
-                            }
-                            ("stop", Some(_)) => {
-                                match cyphernode::stop(){
-                                    Ok(_)=>println!("SUCCESS"),
-                                    Err(e)=>println!("{:#?}", e)
-                                }
-                            }
-                            ("test", Some(_)) => {
-                                match cyphernode::test(){
-                                    Ok(_)=>println!("SUCCESS"),
-                                    Err(e)=>println!("{:#?}", e)
-                                }
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                    ("gatekeeper", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("List service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                    ("proxy", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("List service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }
-                    }                    
-                    ("bitcoin", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("List service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-
-                    ("tor", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("List service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-
-                    ("eps", Some(subcommand_matches)) => {
-                        match subcommand_matches.subcommand() {
-                            ("info", Some(_)) => {
-                                println!("Get service info");
-                            }
-                            ("log", Some(_)) => {
-                                println!("Get service logs");
-                            }
-                            ("exec", Some(_)) => {
-                                println!("Execute command in service container");
-                            }
-                            ("conf", Some(_)) => {
-                                println!("List service configuration.");
-                            }
-                            ("restart", Some(_)) => {
-                                println!("Restart Service");
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                _ => unreachable!(),
+        ("build", Some(_)) => {
+            let db_path = std::env::var("HOME").unwrap() + "/.cncli";
+            let db: sled::Db = sled::open(db_path).unwrap();
+            let path = db.get(b"path").unwrap();
+            if path.is_none() {
+                println!("Repo not initialized. use cncli clone --path $path --repo $repo");
+                panic!("Not initialized.")
             }
+
+            let mut child = Command::new("bash")
+                .arg("build.sh")
+                .current_dir(std::str::from_utf8(&path.unwrap()).unwrap())
+                .spawn()
+                .expect("bash command failed to start");
+
+            println!("PID: {:#?}", child.id());
+
+            let (tx, rx) = channel();
+            ctrlc::set_handler(move || {
+                tx.send(child.kill())
+                    .expect("Could not send signal on channel.")
+            })
+            .expect("Error setting Ctrl-C handler");
+
+            println!("Waiting for Ctrl-C...");
+            rx.recv().expect("Could not receive from channel.").unwrap();
+            println!("Got SIGINT! Exiting...");
         }
-        ("",None) => println!("No subcommand was used. try `cncli help`."), 
+        ("setup", Some(_)) => {
+            let db_path = std::env::var("HOME").unwrap() + "/.cncli";
+            let db: sled::Db = sled::open(db_path).unwrap();
+            let path = db.get(b"path").unwrap();
+            if path.is_none() {
+                println!("Repo not initialized. use cncli clone --path $path --repo $repo");
+                panic!("Not initialized.")
+            }
+
+            let mut child = Command::new("bash")
+                .arg("setup.sh")
+                .current_dir(std::str::from_utf8(&path.unwrap()).unwrap().to_string() + "/dist")
+                .spawn()
+                .expect("bash command failed to start");
+
+            println!("PID: {:#?}", child.id());
+
+            let (tx, rx) = channel();
+            ctrlc::set_handler(move || {
+                tx.send(child.kill())
+                    .expect("Could not send signal on channel.")
+            })
+            .expect("Error setting Ctrl-C handler");
+
+            println!("Waiting for Ctrl-C...");
+            rx.recv().expect("Could not receive from channel.").unwrap();
+            println!("Got SIGINT! Exiting...");
+        }
+        ("start", Some(_)) => {
+            let db_path = std::env::var("HOME").unwrap() + "/.cncli";
+            let db: sled::Db = sled::open(db_path).unwrap();
+            let path = db.get(b"path").unwrap();
+            if path.is_none() {
+                println!("Repo not initialized. use cncli clone --path $path --repo $repo");
+                panic!("Not initialized.")
+            }
+
+            let mut child = Command::new("bash")
+                .arg("start.sh")
+                .current_dir(std::str::from_utf8(&path.unwrap()).unwrap().to_string() + "/dist")
+                .spawn()
+                .expect("bash command failed to start");
+
+            let (tx, rx) = channel();
+            ctrlc::set_handler(move || tx.send(true).expect("Could not send signal on channel."))
+                .expect("Error setting Ctrl-C handler");
+
+            println!("Waiting for Ctrl-C...");
+            let result = rx.recv().expect("Could not receive from channel.");
+            if result {
+                child.kill().expect("failed to kill child");
+            }
+            child.wait().expect("failed to wait on child");
+            println!("DONE");
+            std::process::exit(0)
+
+            // println!("Got SIGINT! Exiting...");
+        }
+        ("stop", Some(_)) => {
+            let db_path = std::env::var("HOME").unwrap() + "/.cncli";
+            let db: sled::Db = sled::open(db_path).unwrap();
+            let path = db.get(b"path").unwrap();
+            if path.is_none() {
+                println!("Repo not initialized. use cncli clone --path $path --repo $repo");
+                panic!("Not initialized.")
+            }
+
+            let mut child = match Command::new("bash")
+                .arg("stop.sh")
+                .current_dir(std::str::from_utf8(&path.unwrap()).unwrap().to_string() + "/dist")
+                .spawn()
+            {
+                Ok(child) => child,
+                Err(_) => {
+                    panic!("Failed to execute command.");
+                }
+            };
+
+            let (tx, rx) = channel();
+            ctrlc::set_handler(move || tx.send(true).expect("Could not send signal on channel."))
+                .expect("Error setting Ctrl-C handler");
+
+            println!("Waiting for Ctrl-C...");
+            let result = rx.recv().expect("Could not receive from channel.");
+            if result {
+                child.kill().expect("failed to kill child");
+            }
+
+            child.wait().expect("failed to wait on child");
+            println!("DONE");
+            std::process::exit(0)
+        }
+        ("list", Some(_)) => {
+            let db_path = std::env::var("HOME").unwrap() + "/.cncli";
+            let db: sled::Db = sled::open(db_path).unwrap();
+            let path = db.get(b"path").unwrap();
+            if path.is_none() {
+                println!("Repo not initialized. use cncli clone --path $path --repo $repo");
+                panic!("Not initialized.")
+            }
+            let options = ScriptOptions::new();
+
+            let args = vec![];
+        
+            let (_, output, _) = run_script::run(
+                r#"
+                docker ps --filter 'network=cyphernodenet' --filter='network=cyphernodeappsnet' --format 'table {{.ID}} \t {{.Names}} \t {{.Status}} \t {{.Ports}}'
+                 "#,
+                &args,
+                &options,
+            )
+            .unwrap();
+            print!("{}",output);
+            std::process::exit(0)
+        }
+        ("", None) => println!("No subcommand was used. try `cncli help`."),
         _ => unreachable!(),
     }
+    
 }
