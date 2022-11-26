@@ -1,7 +1,7 @@
 # cncli
 
-An admin command line control panel for cyphernode.
-
+An admin command line control panel for cyphernode.                               
+                                                            
 ## test run
 
 First install the rust toolchain:

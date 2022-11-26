@@ -5,11 +5,16 @@ use run_script::ScriptOptions;
 use std::process::Command;
 use std::sync::mpsc::channel;
 fn main() {
+    let base_path = env!("CARGO_MANIFEST_DIR").to_string() + "/art/cn.ascii";
+    let contents = std::fs::read_to_string(&base_path)
+        .expect("Should have been able to read the file");
+    let cnart = &format!("\x1b[92;1m{}\x1b[0m", contents.clone());
+
     let matches = App::new("\x1b[0;92mcncli\x1b[0m")
         .about("\x1b[0;94mcyphernode admin control.\x1b[0m")
         .version("\x1b[0;1m0.0.6\x1b[0m")
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .author("ishi: BC5A D8A2 6AAC D383 EF63 0D45 5AE8 AC51 D171 F109")
+        .author(&*cnart.clone())
         .subcommand(
             App::new("init")
                 // .setting(AppSettings::SubcommandRequiredElseHelp)
@@ -58,9 +63,15 @@ fn main() {
                 .display_order(6),
         )
         .subcommand(
+            App::new("reset")
+            .about("Clear (db) current path to cyphernode")
+            .display_order(7),
+
+        )
+        .subcommand(
             App::new("guide")
             .about("Display usage guide")
-            .display_order(7),
+            .display_order(8),
 
         )
         .get_matches();
@@ -117,7 +128,7 @@ fn main() {
                 if exists {
                     db.insert(b"path", (fmtd_path.clone() + "/cyphernode").as_bytes())
                         .unwrap();
-                    println!("Saved EXISTING repo path {}/cyphernode.", fmtd_path);
+                    println!("\x1b[0;92mSaved EXISTING repo path {}/cyphernode.\x1b[0m", fmtd_path);
                 } else {
                     match Repository::clone(repo, fmtd_path.clone()) {
                         Ok(repo) => repo,
@@ -128,7 +139,7 @@ fn main() {
                     };
                     println!("Pulled {} into {}/cyphernode.", repo, fmtd_path.clone());
                     db.insert(b"path", (fmtd_path.clone() + "/cyphernode").as_bytes()).unwrap();
-                    println!("Saved NEW repo path {}/cyphernode.", fmtd_path);
+                    println!("\x1b[0;92mSaved NEW repo path {}/cyphernode.\x1b[0m", fmtd_path);
                 }
             }
         }
@@ -279,23 +290,26 @@ fn main() {
             .unwrap();
             print!("{}", output);
         }
+        ("reset", Some(_)) => {
+            let db_path = std::env::var("HOME").unwrap() + "/.cncli";
+            let db: sled::Db = sled::open(db_path).unwrap();
+            db.remove(b"path").unwrap();
+            println!("\x1b[91;1mRESET WORKING DIRECTORY.\x1b[0m");
+            println!("\x1b[93;1mUse: cncli init -p <PATH> to start again.\x1b[0m");
+
+        }
         ("guide", Some(_)) => {
-            let base_path = env!("CARGO_MANIFEST_DIR").to_string() + "/art/cn.ascii";
             let title = "cyphernode admin client";
-            let contents = std::fs::read_to_string(&base_path)
-                .expect("Should have been able to read the file");
             println!("\x1b[93;1m{}\x1b[0m", title);
-            println!("\x1b[92;1m{}\x1b[0m", contents);
             println!("\x1b[93;1mGETTING STARTED:\x1b[0m");
 
             println!("cncli must be initialized with the init command. The init command sets the path to your cyphernode repo. If this is your first time using cyphernode, chose a new path. If you have an existing repo, use that path.");
             println!("The -p <PATH> argument is required by the init command. An optional repo command allows you to pull a custom repo. The default repo is the master branch from Satoshi Portal.");
             println!("~/.cncli is where working data is stored - primarily the path to your cyphernode repo. If you delete this, you will have to call init again.");
             println!("You can only manage a single cyphernode repo instance at a time.");
-
+            println!("If you are a cyphernode developer and want to use cncli against different repos, you have to use the reset command which removes existing path data.");
 
             println!("\x1b[93;1mEXAMPLE:\x1b[0m");
-
 
             println!("Initialize the default repo:");
             println!("\x1b[92;1mcncli -p /home/ishi/\x1b[0m");
@@ -307,6 +321,7 @@ fn main() {
 
             println!("The outputs of commands that call scripts (build,setup,start,stop) do not exit by themselves and will leave the terminal locked after completion.");
             println!("\x1b[92;1mYou have to manually exit such commands using Ctrl+C.\x1b[0m");
+
 
 
         }
