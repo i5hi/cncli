@@ -34,13 +34,14 @@ sudo strip /usr/bin/cncli
 cargo run
 
 # sets up a wokring directory at $HOME/.cncli where path information about cyphernode repo is cloned
-cargo run init --path /home/ishi --repo https://github.com/SatoshiPortal/cyphernode.git
+cargo run init -p /home/ishi
 
 # run build.sh
 cargo run build
 
-# run setup.sh (works with flags like -irc too)
+# run setup.sh 
 cargo run setup
+cargo run setup irc
 
 # run start.sh
 cargo run start

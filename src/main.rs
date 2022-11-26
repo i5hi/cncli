@@ -42,7 +42,7 @@ fn main() {
                 .arg(
                     Arg::with_name("irc")
                         .takes_value(false)
-                        .help("Use -irc flag"),
+                        .help("Use irc flag with setup"),
                 ),
         )
         .subcommand(App::new("start").about("Run start script").display_order(3))
@@ -154,7 +154,7 @@ fn main() {
             rx.recv().expect("Could not receive from channel.").unwrap();
             println!("Got SIGINT! Exiting...");
         }
-        ("setup", Some(_)) => {
+        ("setup", Some(subcommands)) => {
             let db_path = std::env::var("HOME").unwrap() + "/.cncli";
             let db: sled::Db = sled::open(db_path).unwrap();
             let path = db.get(b"path").unwrap();
@@ -163,8 +163,16 @@ fn main() {
                 std::process::exit(1)
             }
 
+           
+            let irc = if subcommands.is_present("irc"){
+                "-irc"
+            }else{
+                ""
+            };
+
             let mut child = Command::new("bash")
                 .arg("setup.sh")
+                .arg(irc)
                 .current_dir(std::str::from_utf8(&path.unwrap()).unwrap().to_string() + "/dist")
                 .spawn()
                 .expect("bash command failed to start");
