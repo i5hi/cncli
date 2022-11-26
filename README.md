@@ -40,9 +40,11 @@ Once you have rust installed and cloned the project. You can use `cargo run` to 
 ALTERNATIVELY, build the binary and move it to your /bin directory:
 
 ```bash
-cargo build --release -j <CPU CORES>
-cp target/release/cnclie /bin
-strip /bin/cncli
+cargo build --release -j 4
+# -j sets number of cpu cores
+sudo cp target/release/cncli /usr/bin
+sudo strip /usr/bin/cncli
+# strips size of XCOFF object files; resulting in 3x size reduction
 ```
 
 ```bash
