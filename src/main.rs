@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use clap::{App, AppSettings, Arg, SubCommand};
+use git2::Repository;
 
 mod lib;
 mod commands;
@@ -10,16 +11,23 @@ fn main() {
         .about("\x1b[0;94mCyphernode admin tools.\x1b[0m")
         .version("\x1b[0;1m0.0.1\x1b[0m")
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .author("Bitcoin Watchdog: BC5A D8A2 6AAC D383 EF63 0D45 5AE8 AC51 D171 F109")
+        .author("ishi: BC5A D8A2 6AAC D383 EF63 0D45 5AE8 AC51 D171 F109")
         .subcommand(
-            App::new("fetch")
-                .about("Get cyphernode release from SatoshiPortal")
+            App::new("init")
+                .about("Setup cyphernode locally")
                 .display_order(1)
                 .arg(
-                    Arg::with_name("version")
-                    .short("v")
-                    .help("Choose version.")
-                    .default_value("latest")
+                    Arg::with_name("repo")
+                    .takes_value(true)
+                    .short("r")
+                    .help("Url to cyphernode repo")
+                    .default_value("https://github.com/SatoshiPortal/cyphernode.git")
+                )
+                .arg(
+                    Arg::with_name("path")
+                    .takes_value(true)
+                    .short("p")
+                    .help("Choose path to repo.")
                 )
         )
         .subcommand(
@@ -219,8 +227,37 @@ fn main() {
         .get_matches();
     
     match matches.subcommand() {
-        ("init", Some(_)) => {
-            println!("CYPHERNODE INIT");
+        ("init", Some(submatches)) => {
+            let db_path = std::env::var("HOME").unwrap() + "/.cncli";
+            let db: sled::Db = sled::open(db_path).unwrap();
+            let path = db.get(b"path").unwrap();
+            if path.is_some(){
+                let exists = std::path::Path::new((std::str::from_utf8(&path.clone().unwrap()).unwrap().to_string()).as_str()).exists();
+                if exists{
+                    println!("Repo already exists at {:#?}",std::str::from_utf8(&path.clone().unwrap()).unwrap().to_string());
+                    panic!("Already initialized.")
+                }
+            }
+            let repo = submatches.value_of("repo").unwrap();
+            let path = submatches.value_of("path");
+            if path.is_none(){
+                println!("--path is required. This is where the repo will be cloned.");
+                panic!("--path is required.");
+            }
+            else{
+                let exists = std::path::Path::new((path.clone().unwrap().to_string() + "/cyphernode").as_str()).exists();
+                if exists{
+                    db.insert(b"path", (path.unwrap().to_string() + "/cyphernode").as_bytes()).unwrap();
+                    panic!("Repo exists at path {}/cyphernode", path.unwrap());
+
+                }
+            }
+            match Repository::clone(repo, path.unwrap()) {
+                Ok(repo) => repo,
+                Err(e) => panic!("failed to clone: {}", e),
+            };
+
+            db.insert(b"path", path.unwrap().as_bytes()).unwrap();
         }
         ("info", Some(_)) => {
             println!("CYPHERNODE INFO");
