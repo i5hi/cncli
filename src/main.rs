@@ -57,6 +57,12 @@ fn main() {
                 .about("Returns data stored in db")
                 .display_order(6),
         )
+        .subcommand(
+            App::new("guide")
+            .about("Display usage guide")
+            .display_order(7),
+
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -273,7 +279,39 @@ fn main() {
             .unwrap();
             print!("{}", output);
         }
+        ("guide", Some(_)) => {
+            let base_path = env!("CARGO_MANIFEST_DIR").to_string() + "/art/cn.ascii";
+            let title = "cyphernode admin client";
+            let contents = std::fs::read_to_string(&base_path)
+                .expect("Should have been able to read the file");
+            println!("\x1b[93;1m{}\x1b[0m", title);
+            println!("\x1b[92;1m{}\x1b[0m", contents);
+            println!("\x1b[93;1mGETTING STARTED:\x1b[0m");
+
+            println!("cncli must be initialized with the init command. The init command sets the path to your cyphernode repo. If this is your first time using cyphernode, chose a new path. If you have an existing repo, use that path.");
+            println!("The -p <PATH> argument is required by the init command. An optional repo command allows you to pull a custom repo. The default repo is the master branch from Satoshi Portal.");
+            println!("~/.cncli is where working data is stored - primarily the path to your cyphernode repo. If you delete this, you will have to call init again.");
+            println!("You can only manage a single cyphernode repo instance at a time.");
+
+
+            println!("\x1b[93;1mEXAMPLE:\x1b[0m");
+
+
+            println!("Initialize the default repo:");
+            println!("\x1b[92;1mcncli -p /home/ishi/\x1b[0m");
+
+            println!("Initialize a custom repo:");
+            println!("\x1b[92;1mcncli -p /home/ishi/ -r https://github.com/i5hi/cyphernode.git\x1b[0m");
+
+            println!("\x1b[93;1mBEHAVIOUR NOTES:\x1b[0m");
+
+            println!("The outputs of commands that call scripts (build,setup,start,stop) do not exit by themselves and will leave the terminal locked after completion.");
+            println!("\x1b[92;1mYou have to manually exit such commands using Ctrl+C.\x1b[0m");
+
+
+        }
         ("", None) => println!("No subcommand was used. try `cncli help`."),
         _ => unreachable!(),
     }
 }
+
