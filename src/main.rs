@@ -214,8 +214,9 @@ fn main() {
             if result {
                 child.kill().expect("failed to kill child");
             }
-            child.wait().expect("failed to wait on child");
-            println!("DONE");
+            // child.wait().expect("failed to wait on child");
+            // std::process::exit(0)
+            // println!("DONE");
             // println!("Got SIGINT! Exiting...");
         }
         ("stop", Some(_)) => {
@@ -248,8 +249,7 @@ fn main() {
                 child.kill().expect("failed to kill child");
             }
 
-            child.wait().expect("failed to wait on child");
-            println!("DONE");
+            // println!("DONE. YOU CAN Ctrl+C to Exit now: {:#?}.", status);
         }
         ("ps", Some(_)) => {
             let db_path = std::env::var("HOME").unwrap() + "/.cncli";
