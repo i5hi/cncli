@@ -5,16 +5,13 @@ use run_script::ScriptOptions;
 use std::process::Command;
 use std::sync::mpsc::channel;
 fn main() {
-    let base_path = env!("CARGO_MANIFEST_DIR").to_string() + "/art/cn.ascii";
-    let contents = std::fs::read_to_string(&base_path)
-        .expect("Should have been able to read the file");
-    let cnart = &format!("\x1b[92;1m{}\x1b[0m", contents.clone());
+
 
     let matches = App::new("\x1b[0;92mcncli\x1b[0m")
         .about("\x1b[0;94mcyphernode admin control.\x1b[0m")
         .version("\x1b[0;1m0.0.6\x1b[0m")
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .author(&*cnart.clone())
+        .author("\x1b[0;91mishi: BC5A D8A2 6AAC D383 EF63 0D45 5AE8 AC51 D171 F109 @ keyserver.ubuntu.com\x1b[0m")
         .subcommand(
             App::new("init")
                 // .setting(AppSettings::SubcommandRequiredElseHelp)
@@ -73,6 +70,11 @@ fn main() {
             .about("Display usage guide")
             .display_order(8),
 
+        )
+        .subcommand(
+            App::new("art")
+            .about("Display cyphernode art")
+            .display_order(9),
         )
         .get_matches();
 
@@ -312,15 +314,25 @@ fn main() {
             println!("\x1b[93;1mEXAMPLE:\x1b[0m");
 
             println!("Initialize the default repo:");
-            println!("\x1b[92;1mcncli -p /home/ishi/\x1b[0m");
+            println!("\x1b[92;1mcncli init -p /home/ishi/\x1b[0m");
 
             println!("Initialize a custom repo:");
-            println!("\x1b[92;1mcncli -p /home/ishi/ -r https://github.com/i5hi/cyphernode.git\x1b[0m");
+            println!("\x1b[92;1mcncli init -p /home/ishi/ -r https://github.com/i5hi/cyphernode.git\x1b[0m");
 
             println!("\x1b[93;1mBEHAVIOUR NOTES:\x1b[0m");
 
             println!("The outputs of commands that call scripts (build,setup,start,stop) do not exit by themselves and will leave the terminal locked after completion.");
             println!("\x1b[92;1mYou have to manually exit such commands using Ctrl+C.\x1b[0m");
+
+
+
+        }
+        ("art", Some(_)) => {
+            let base_path = env!("CARGO_MANIFEST_DIR").to_string() + "/art/cn.ascii";
+            let contents = std::fs::read_to_string(&base_path)
+                .expect("Should have been able to read the file");
+            let cnart = &format!("\x1b[92;1m{}\x1b[0m", contents.clone());
+            println!("\x1b[92;1m{}\x1b[0m",cnart);
 
 
 
